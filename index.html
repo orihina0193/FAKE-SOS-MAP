@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イベント課金 最安値シミュレーター</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .controls { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .output { white-space: pre-wrap; background-color: #f4f4f4; padding: 15px; border-radius: 8px; min-height: 100px; margin-top: 20px; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>イベント課金 最安値シミュレーター</h1>
+    <p>連鎖購入の制約を考慮し、目標達成のための最安の購入計画を算出します。</p>
+
+    <div class="controls">
+        <label>目標アイテム数を選択:</label><br>
+        <input type="radio" id="target270" name="targetItem" value="270" checked>
+        <label for="target270">270個</label>
+        <input type="radio" id="target450" name="targetItem" value="450">
+        <label for="target450">450個</label>
+        <br><br>
+        <button onclick="runSimulator()">計算を実行</button>
+    </div>
+
+    <h2>計算結果</h2>
+    <div id="output" class="output">
+        ここに計算結果が表示されます。
+    </div>
+
+    <script src="simulator.js"></script>
+</body>
+</html>
