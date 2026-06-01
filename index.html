@@ -1,35 +1,358 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>イベント課金 最安値シミュレーター</title>
-    <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .controls { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
-        .output { white-space: pre-wrap; background-color: #f4f4f4; padding: 15px; border-radius: 8px; min-height: 100px; margin-top: 20px; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>イベント課金 最安値シミュレーター (GitHub完結版)</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --accent: #4f46e5;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 24px 16px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #111827;
+      margin-top: 0;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-sub);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+    }
+    input[type="number"] {
+      width: 100%;
+      max-width: 200px;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent);
+      text-align: center;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+    .unit {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    button.calc-btn {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 10px;
+    }
+    button.calc-btn:hover {
+      background-color: #4338ca;
+    }
+    button.calc-btn:active {
+      transform: scale(0.995);
+    }
+    .result-section {
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+    .result-box {
+      background-color: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      font-family: inherit;
+      font-size: 13px;
+      white-space: pre-wrap;
+      color: #0f172a;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .footer {
+      font-size: 11px;
+      color: var(--text-sub);
+      text-align: center;
+      margin-top: 24px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <h1>イベント課金 最安値シミュレーター</h1>
-    <p>連鎖購入の制約を考慮し、目標達成のための最安の購入計画を算出します。</p>
-
-    <div class="controls">
-        <label>目標探索回数を選択:</label><br>
-        <input type="radio" id="target270" name="targetItem" value="270" checked>
-        <label for="target270">探索300(270個)</label>
-        <input type="radio" id="target450" name="targetItem" value="450">
-        <label for="target450">探索500(450個）</label>
-        <br><br>
-        <button onclick="runSimulator()">計算を実行</button>
+    <div class="subtitle">連鎖割引/10連特典考慮・最安値自動算出</div>
+    
+    <div class="form-group">
+      <label for="targetExplore" style="text-align: center;">目標とするガチャ（探索）回数</label>
+      <div class="input-wrapper">
+        <input type="number" id="targetExplore" value="500" placeholder="500" min="1">
+        <span class="unit">回</span>
+      </div>
     </div>
 
-    <h2>計算結果</h2>
-    <div id="output" class="output">
-        ここに計算結果が表示されます。
-    </div>
+    <button class="calc-btn" onclick="runCalculation()">最安ルートを最適計算</button>
 
-    <script src="simulator.js"></script>
+    <div class="result-section">
+      <label>計算シミュレーション結果</label>
+      <div id="output" class="result-box">目標回数を入力し、計算ボタンを押してください。</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    © イベント課金 最安値シミュレーター (GitHub Pages対応版)
+  </div>
+
+  <script>
+    // 構成データデフォルト値
+    const baseItems = [
+      { id: "pass-1", name: "パスI", items: 14, cost: 1340, enabled: true, type: "one-time" },
+      { id: "pass-2", name: "パスII", items: 30, cost: 2780, enabled: true, type: "one-time" },
+      { id: "diamond-exchange", name: "ダイヤ交換", items: 30, cost: 0, enabled: true, type: "one-time" },
+      { id: "daily-pack", name: "デイリー無料/格安", items: 4, cost: 0, enabled: true, type: "daily" }
+    ];
+
+    const chainStages = [
+      { stage: 1, items: 2, cost: 132, name: "限定連鎖パックⅠ (2個/132円)" },
+      { stage: 2, items: 6, cost: 670, name: "限定連鎖パックⅡ (6個/670円)" },
+      { stage: 3, items: 10, cost: 1340, name: "限定連鎖パックⅢ (10個/1340円)" },
+      { stage: 4, items: 20, cost: 2780, name: "限定連鎖パックⅣ (20個/2780円)" }
+    ];
+
+    const unlimitedPack = {
+      items: 45,
+      cost: 6780,
+      name: "都度購入 45個パック"
+    };
+
+    const eventDays = 3;
+
+    function calculateTicketsForExplores(explores) {
+      if (explores <= 0) return 0;
+      const tens = Math.floor(explores / 10);
+      const ones = explores % 10;
+      return tens * 9 + ones;
+    }
+
+    function calculateExploresForTickets(tickets) {
+      if (tickets <= 0) return 0;
+      const tens = Math.floor(tickets / 9);
+      const rem = tickets % 9;
+      return tens * 10 + rem;
+    }
+
+    function runCalculation() {
+      const targetVal = parseFloat(document.getElementById('targetExplore').value) || 0;
+      const requiredTickets = calculateTicketsForExplores(targetVal);
+      
+      const resultObj = runCheapestPlanSimulation(
+        targetVal,
+        eventDays,
+        baseItems,
+        chainStages,
+        unlimitedPack
+      );
+
+      const actualExplores = calculateExploresForTickets(resultObj.totalPurchasedTickets);
+      const excess = actualExplores - targetVal;
+
+      let text = "🎉 【最適化購入プランシミュレーション結果】\\n";
+      text += "--------------------------------------\\n";
+      text += `■ 目標探索回数 : \${targetVal} 回 (必要チケット換算: \${requiredTickets} 枚)\\n`;
+      text += `■ 最小合計費用 : \${resultObj.totalCost.toLocaleString()} 円\\n`;
+      text += `■ 獲得チケット数: \${resultObj.totalPurchasedTickets} 枚 (最大 \${actualExplores} 回分: +\${excess}回余裕)\\n`;
+      text += "--------------------------------------\\n\\n";
+      
+      text += "📅 【推奨購入タイムラインスケジュール】\\n";
+      resultObj.dailyPlans.forEach(plan => {
+        text += `\\n▼ \${plan.dayIndex}日目 (この日の獲得: \${plan.totalItems}個 / 費用: \${plan.totalCost.toLocaleString()}円)\\n`;
+        plan.chainDetails.forEach(detail => {
+          text += `  \${detail}\\n`;
+        });
+      });
+
+      document.getElementById('output').innerText = text;
+    }
+
+    function runCheapestPlanSimulation(targetExplore, eventDays, baseItems, chainStages, unlimitedPack) {
+      const requiredTickets = calculateTicketsForExplores(targetExplore);
+      
+      let baseItemsTotal = 0;
+      let baseCostTotal = 0;
+      baseItems.forEach(item => {
+        if (item.enabled) {
+          if (item.type === 'one-time') {
+            baseItemsTotal += item.items;
+            baseCostTotal += item.cost;
+          } else if (item.type === 'daily') {
+            baseItemsTotal += item.items * eventDays;
+            baseCostTotal += item.cost * eventDays;
+          }
+        }
+      });
+
+      const neededFromExtra = Math.max(0, requiredTickets - baseItemsTotal);
+
+      const stagesCount = chainStages.length;
+      const chainPacksAtStage = [];
+      let accumItems = 0;
+      let accumCost = 0;
+
+      chainPacksAtStage.push({ m_items: 0, m_cost: 0, details: [] });
+
+      for (let i = 0; i < stagesCount; i++) {
+        const stage = chainStages[i];
+        accumItems += stage.items;
+        accumCost += stage.cost;
+        
+        const detailsArr = [];
+        for (let j = 0; j <= i; j++) {
+          detailsArr.push(\`・限定連鎖パック Ⅰ\${"Ⅰ".repeat(j)} (\${chainStages[j].items}個/\${chainStages[j].cost}円)\`);
+        }
+
+        chainPacksAtStage.push({
+          m_items: accumItems,
+          m_cost: accumCost,
+          details: detailsArr
+        });
+      }
+
+      let bestCost = Infinity;
+      let bestCombination = [];
+
+      function solve(dayIndex, currentItems, currentCost, currentPath) {
+        if (dayIndex === eventDays) {
+          const shortfall = Math.max(0, neededFromExtra - currentItems);
+          const packsNeeded = Math.ceil(shortfall / unlimitedPack.items);
+          const unlimitedItems = packsNeeded * unlimitedPack.items;
+          const unlimitedCost = packsNeeded * unlimitedPack.cost;
+
+          const totalCost = currentCost + unlimitedCost;
+          if (totalCost < bestCost) {
+            bestCost = totalCost;
+            bestCombination = currentPath.map((index, dIdx) => ({
+              dayNumber: dIdx + 1,
+              stageIndex: index,
+              unlimitedCount: (dIdx === eventDays - 1) ? packsNeeded : 0
+            }));
+          }
+          return;
+        }
+
+        for (let s = 0; s <= stagesCount; s++) {
+          const stageCost = chainPacksAtStage[s].m_cost;
+          const stageItems = chainPacksAtStage[s].m_items;
+          solve(dayIndex + 1, currentItems + stageItems, currentCost + stageCost, [...currentPath, s]);
+        }
+      }
+
+      solve(0, 0, 0, []);
+
+      const dailyPlans = [];
+      let chainPacksTotal = 0;
+
+      bestCombination.forEach((comb, idx) => {
+        const dayNum = idx + 1;
+        const stageData = chainPacksAtStage[comb.stageIndex];
+        chainPacksTotal += stageData.m_items;
+
+        const chainDetails = [...stageData.details];
+        let dayItems = stageData.m_items;
+        let dayCost = stageData.m_cost;
+
+        if (comb.unlimitedCount > 0) {
+          const unlimCost = comb.unlimitedCount * unlimitedPack.cost;
+          const unlimItems = comb.unlimitedCount * unlimitedPack.items;
+          dayItems += unlimItems;
+          dayCost += unlimCost;
+          chainDetails.push(\`・\${unlimitedPack.name} を \${comb.unlimitedCount}回購入 (+\${unlimItems}個/\${unlimCost}円)\`);
+        }
+
+        dailyPlans.push({
+          dayIndex: dayNum,
+          chainStage: comb.stageIndex,
+          unlimitedPacksCount: comb.unlimitedCount,
+          totalItems: dayItems,
+          totalCost: dayCost,
+          chainDetails
+        });
+      });
+
+      if (dailyPlans.length > 0) {
+        baseItems.forEach(item => {
+          if (item.enabled) {
+            if (item.type === 'one-time') {
+              dailyPlans[0].chainDetails.unshift(\`・[必須確定枠] \${item.name} (\${item.items}個/\${item.cost}円)\`);
+            } else if (item.type === 'daily') {
+              dailyPlans.forEach(plan => {
+                plan.chainDetails.unshift(\`・[必須毎日枠] \${item.name} (\${item.items}個/\${item.cost}円)\`);
+              });
+            }
+          }
+        });
+      }
+
+      return {
+        totalCost: baseCostTotal + bestCost,
+        totalPurchasedTickets: baseItemsTotal + chainPacksTotal + bestCombination.reduce((acc, c) => acc + (c.unlimitedCount * unlimitedPack.items), 0),
+        baseItemsTotal,
+        baseCostTotal,
+        chainPacksTotal,
+        requiredTickets,
+        dailyPlans
+      };
+    }
+
+    // 初回実行
+    runCalculation();
+  </script>
 </body>
 </html>
