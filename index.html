@@ -204,18 +204,18 @@
       const actualExplores = calculateExploresForTickets(resultObj.totalPurchasedTickets);
       const excess = actualExplores - targetVal;
 
-      let text = "🎉 【最適化購入プランシミュレーション結果】\\n";
-      text += "--------------------------------------\\n";
-      text += `■ 目標探索回数 : \${targetVal} 回 (必要チケット換算: \${requiredTickets} 枚)\\n`;
-      text += `■ 最小合計費用 : \${resultObj.totalCost.toLocaleString()} 円\\n`;
-      text += `■ 獲得チケット数: \${resultObj.totalPurchasedTickets} 枚 (最大 \${actualExplores} 回分: +\${excess}回余裕)\\n`;
-      text += "--------------------------------------\\n\\n";
+      let text = "🎉 【最適化購入プランシミュレーション結果】\n";
+      text += "--------------------------------------\n";
+      text += "■ 目標探索回数 : " + targetVal + " 回 (必要チケット換算: " + requiredTickets + " 枚)\n";
+      text += "■ 最小合計費用 : " + resultObj.totalCost.toLocaleString() + " 円\n";
+      text += "■ 獲得チケット数: " + resultObj.totalPurchasedTickets + " 枚 (最大 " + actualExplores + " 回分: +" + excess + "回余裕)\n";
+      text += "--------------------------------------\n\n";
       
-      text += "📅 【推奨購入タイムラインスケジュール】\\n";
+      text += "📅 【推奨購入タイムラインスケジュール】\n";
       resultObj.dailyPlans.forEach(plan => {
-        text += `\\n▼ \${plan.dayIndex}日目 (この日の獲得: \${plan.totalItems}個 / 費用: \${plan.totalCost.toLocaleString()}円)\\n`;
+        text += "\n▼ " + plan.dayIndex + "日目 (この日の獲得: " + plan.totalItems + "個 / 費用: " + plan.totalCost.toLocaleString() + "円)\n";
         plan.chainDetails.forEach(detail => {
-          text += `  \${detail}\\n`;
+          text += "  " + detail + "\n";
         });
       });
 
@@ -255,7 +255,8 @@
         
         const detailsArr = [];
         for (let j = 0; j <= i; j++) {
-          detailsArr.push(\`・限定連鎖パック Ⅰ\${"Ⅰ".repeat(j)} (\${chainStages[j].items}個/\${chainStages[j].cost}円)\`);
+          const roman = "Ⅰ" + "Ⅰ".repeat(j);
+          detailsArr.push("・限定連鎖パック " + roman + " (" + chainStages[j].items + "個/" + chainStages[j].cost + "円)");
         }
 
         chainPacksAtStage.push({
@@ -313,7 +314,7 @@
           const unlimItems = comb.unlimitedCount * unlimitedPack.items;
           dayItems += unlimItems;
           dayCost += unlimCost;
-          chainDetails.push(\`・\${unlimitedPack.name} を \${comb.unlimitedCount}回購入 (+\${unlimItems}個/\${unlimCost}円)\`);
+          chainDetails.push("・" + unlimitedPack.name + " を " + comb.unlimitedCount + "回購入 (+" + unlimItems + "個/" + unlimCost + "円)");
         }
 
         dailyPlans.push({
@@ -330,10 +331,10 @@
         baseItems.forEach(item => {
           if (item.enabled) {
             if (item.type === 'one-time') {
-              dailyPlans[0].chainDetails.unshift(\`・[必須確定枠] \${item.name} (\${item.items}個/\${item.cost}円)\`);
+              dailyPlans[0].chainDetails.unshift("・[必須確定枠] " + item.name + " (" + item.items + "個/" + item.cost + "円)");
             } else if (item.type === 'daily') {
               dailyPlans.forEach(plan => {
-                plan.chainDetails.unshift(\`・[必須毎日枠] \${item.name} (\${item.items}個/\${item.cost}円)\`);
+                plan.chainDetails.unshift("・[必須毎日枠] " + item.name + " (" + item.items + "個/" + item.cost + "円)");
               });
             }
           }
