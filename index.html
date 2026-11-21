@@ -5,28 +5,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>イベント課金 最安値シミュレーター</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .controls { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
-        .output { white-space: pre-wrap; background-color: #f4f4f4; padding: 15px; border-radius: 8px; min-height: 100px; margin-top: 20px; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        :root {
+            --green: #4a6b34;
+            --green-dark: #364d25;
+            --green-soft: #eef3e8;
+            --orange: #f28c28;
+            --orange-dark: #d97a1b;
+            --ink: #2b3326;
+            --muted: #6b7566;
+            --line: #dfe6d8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+            color: var(--ink);
+            background: #fafcf7;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+            line-height: 1.6;
+        }
+
+        /* ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--green-dark), var(--green));
+            color: #fff;
+            border-radius: 14px;
+            padding: 18px 18px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 3px 10px rgba(54, 77, 37, .25);
+        }
+        header h1 { font-size: 1.25rem; margin: 0 0 4px; letter-spacing: .02em; }
+        header p { margin: 0; font-size: .85rem; opacity: .9; }
+
+        /* 操作パネル */
+        .controls {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .controls .label { font-size: .85rem; font-weight: bold; color: var(--green); margin-bottom: 10px; }
+        .choices { display: flex; gap: 10px; }
+        .choices input { position: absolute; opacity: 0; pointer-events: none; }
+        .choices label {
+            flex: 1;
+            text-align: center;
+            padding: 12px 6px;
+            border: 2px solid var(--line);
+            border-radius: 12px;
+            background: var(--green-soft);
+            font-weight: bold;
+            font-size: .95rem;
+            cursor: pointer;
+            transition: .15s;
+        }
+        .choices label small { display: block; font-weight: normal; font-size: .75rem; color: var(--muted); }
+        .choices input:checked + label {
+            border-color: var(--orange);
+            background: #fff4e6;
+            color: var(--orange-dark);
+            box-shadow: 0 2px 6px rgba(242, 140, 40, .25);
+        }
+        .choices input:checked + label small { color: var(--orange-dark); }
+
+        button {
+            width: 100%;
+            margin-top: 14px;
+            padding: 14px;
+            background: var(--orange);
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--orange-dark);
+        }
+        button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--orange-dark); }
+
+        /* 結果 */
+        h2 { font-size: 1rem; color: var(--green); margin: 0 0 10px; padding-left: 10px; border-left: 4px solid var(--orange); }
+        .placeholder { text-align: center; color: var(--muted); padding: 28px 12px; border: 2px dashed var(--line); border-radius: 14px; font-size: .9rem; }
+
+        .total {
+            background: linear-gradient(135deg, #fff4e6, #ffe6c7);
+            border: 2px solid var(--orange);
+            border-radius: 14px;
+            text-align: center;
+            padding: 16px 12px;
+            margin-bottom: 14px;
+        }
+        .total-label { font-size: .85rem; color: var(--orange-dark); font-weight: bold; }
+        .total-num { font-size: 2.2rem; font-weight: 800; color: var(--ink); line-height: 1.3; }
+        .total-sub { font-size: .8rem; color: var(--muted); }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: var(--green);
+            color: #fff;
+            padding: 9px 14px;
+        }
+        .card-head h3 { margin: 0; font-size: .95rem; }
+        .chip {
+            background: rgba(255, 255, 255, .2);
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: .78rem;
+            font-weight: bold;
+        }
+        .card ul { list-style: none; margin: 0; padding: 4px 14px; }
+        .card li {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px dashed var(--line);
+        }
+        .card li:last-child { border-bottom: none; }
+        .card li .n small { display: block; font-size: .75rem; color: var(--muted); }
+        .card li .p { font-weight: bold; white-space: nowrap; }
+        .card li.none { color: var(--muted); justify-content: center; }
+        .error { color: #b3261e; background: #fdecea; padding: 12px; border-radius: 10px; }
+
+        footer { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 16px; }
     </style>
 </head>
 <body>
-    <h1>イベント課金 最安値シミュレーター</h1>
-    <p>連鎖購入の制約を考慮し、目標達成のための最安の購入計画を算出します。</p>
+    <header>
+        <h1>🧟 イベント課金 最安値シミュレーター</h1>
+        <p>連鎖購入の制約を考慮し、目標達成のための最安の購入計画を算出します。</p>
+    </header>
+
     <div class="controls">
-    <label>目標探索回数を選択:</label><br>
-    <input type="radio" id="target270" name="targetItem" value="270" checked>
-    <label for="target270">探索300(270個)</label>
-    <input type="radio" id="target450" name="targetItem" value="450">
-    <label for="target450">探索500(450個）</label>
-    <br><br>
-    <button onclick="runSimulator()">計算を実行</button>
-</div>
+        <div class="label">目標探索回数を選択</div>
+        <div class="choices">
+            <input type="radio" id="target270" name="targetItem" value="270" checked>
+            <label for="target270">探索300<small>270個</small></label>
+            <input type="radio" id="target450" name="targetItem" value="450">
+            <label for="target450">探索500<small>450個</small></label>
+        </div>
+        <button onclick="runSimulator()">計算を実行</button>
+    </div>
 
-<h2>計算結果</h2>
-<div id="output" class="output">
-    ここに計算結果が表示されます。
-</div>
+    <h2>計算結果</h2>
+    <div id="output">
+        <div class="placeholder">「計算を実行」を押すと、ここに結果が表示されます。</div>
+    </div>
 
-<script src="simulator.js"></script>
+    <footer>金額は2026/8/10改定後の価格です</footer>
+
+    <script src="simulator.js"></script>
+</body>
+</html>
