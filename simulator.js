@@ -5,31 +5,31 @@
 // -----------------------------------------------------------
 const EVENT_DAYS = 3;
 const BASE_ITEMS = {
-    "パスI": { items: 14, cost: 1340 },
-    "パスII": { items: 30, cost: 2780 },
+    "パスI": { items: 14, cost: 1600 },
+    "パスII": { items: 30, cost: 3200 },
     "ダイヤ交換": { items: 30, cost: 0 },
     "デイリー": { items: 4 * EVENT_DAYS, cost: 0 },
 };
 
 const DAILY_PACKS_CHAIN = [
-    { items: 2, cost: 132, label: "限定パック 2個 (132円)" },
-    { items: 6, cost: 670, label: "限定パック 6個 (670円)" },
-    { items: 10, cost: 1340, label: "限定パック 10個 (1,340円)" },
-    { items: 20, cost: 2780, label: "限定パック 20個 (2,780円)" }
+    { items: 2, cost: 160, label: "限定パック 2個 (160円)" },
+    { items: 6, cost: 800, label: "限定パック 6個 (800円)" },
+    { items: 10, cost: 1600, label: "限定パック 10個 (1,600円)" },
+    { items: 20, cost: 3200, label: "限定パック 20個 (3,200円)" }
 ];
 
 const UNLIMITED_PACK = {
     items: 45,
-    cost: 6780,
+    cost: 8000,
     label: "都度購入 45個パック"
 };
 
 const CHAIN_PACK_OPTIONS = [
     { items: 0, cost: 0, details: [] },
-    { items: 2, cost: 132, details: [DAILY_PACKS_CHAIN[0]] },
-    { items: 8, cost: 802, details: [DAILY_PACKS_CHAIN[0], DAILY_PACKS_CHAIN[1]] },
-    { items: 18, cost: 2142, details: [DAILY_PACKS_CHAIN[0], DAILY_PACKS_CHAIN[1], DAILY_PACKS_CHAIN[2]] },
-    { items: 38, cost: 4922, details: DAILY_PACKS_CHAIN }
+    { items: 2, cost: 160, details: [DAILY_PACKS_CHAIN[0]] },
+    { items: 8, cost: 960, details: [DAILY_PACKS_CHAIN[0], DAILY_PACKS_CHAIN[1]] },
+    { items: 18, cost: 2560, details: [DAILY_PACKS_CHAIN[0], DAILY_PACKS_CHAIN[1], DAILY_PACKS_CHAIN[2]] },
+    { items: 38, cost: 5760, details: DAILY_PACKS_CHAIN }
 ];
 
 // -----------------------------------------------------------
