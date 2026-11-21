@@ -12,10 +12,10 @@ const BASE_ITEMS = {
 };
 
 const DAILY_PACKS_CHAIN = [
-    { items: 2, cost: 160, label: "限定パック 2個 (160円)" },
-    { items: 6, cost: 800, label: "限定パック 6個 (800円)" },
-    { items: 10, cost: 1600, label: "限定パック 10個 (1,600円)" },
-    { items: 20, cost: 3200, label: "限定パック 20個 (3,200円)" }
+    { items: 2, cost: 160, name: "限定パック 2個", label: "限定パック 2個 (160円)" },
+    { items: 6, cost: 800, name: "限定パック 6個", label: "限定パック 6個 (800円)" },
+    { items: 10, cost: 1600, name: "限定パック 10個", label: "限定パック 10個 (1,600円)" },
+    { items: 20, cost: 3200, name: "限定パック 20個", label: "限定パック 20個 (3,200円)" }
 ];
 
 const UNLIMITED_PACK = {
@@ -38,65 +38,67 @@ const CHAIN_PACK_OPTIONS = [
 
 function runSimulator() {
     const outputElement = document.getElementById('output');
-    
-    // HTMLのラジオボタンから目標値を取得
     const targetItemValue = parseInt(document.querySelector('input[name="targetItem"]:checked').value);
-    
-    // 非同期処理を考慮せず、同期的に計算関数を呼び出す (Web環境ではScriptableのasync/awaitは不要)
-    const result = calculateOptimalCost(targetItemValue);
-    
-    // 結果をHTMLに出力
-    outputElement.textContent = result;
+    outputElement.innerHTML = calculateOptimalCost(targetItemValue);
 }
 
+// -----------------------------------------------------------
+// 3. 表示用の部品
+// -----------------------------------------------------------
+
+function yen(n) { return n.toLocaleString() + '円'; }
+
+function rowHtml(name, cost, note) {
+    return `<li><span class="n">${name}${note ? `<small>${note}</small>` : ''}</span><span class="p">${yen(cost)}</span></li>`;
+}
+
+function cardHtml(title, chip, rows) {
+    return `<section class="card">
+  <div class="card-head"><h3>${title}</h3><span class="chip">${chip}</span></div>
+  <ul>${rows.join('')}</ul>
+</section>`;
+}
+
+function totalHtml(label, cost, sub) {
+    return `<div class="total">
+  <div class="total-label">${label}</div>
+  <div class="total-num">${yen(cost)}</div>
+  <div class="total-sub">${sub}</div>
+</div>`;
+}
 
 // -----------------------------------------------------------
-// 3. 計算ロジック本体 (calculateOptimalCost)
+// 4. 計算ロジック本体 (calculateOptimalCost)
 // -----------------------------------------------------------
 
 function calculateOptimalCost(targetItemValue) {
-    // === ここに前回の最終版の calculateOptimalCost 関数の内容を丸ごとコピーします ===
-    // (ScriptableのAPI呼び出し部分を削除し、純粋な計算ロジックのみを使用)
-    // ... (前回のcalculateOptimalCost関数のコードをそのまま貼り付け) ...
-    
-    let targetItem = targetItemValue;
+    const targetItem = targetItemValue;
 
     if (targetItem !== 270 && targetItem !== 450) {
-         return `エラー：目標値の取得失敗\n\n無効な目標値「${targetItem}」が渡されました。`;
+        return `<p class="error">エラー：無効な目標値「${targetItem}」が渡されました。</p>`;
     }
-
-    const TARGET = { targetItem: targetItem, label: `目標アイテム ${targetItem}個` };
 
     // 必須アイテムの計算
     let baseItemsTotal = 0;
     let baseCostTotal = 0;
-    let baseDetails = [];
+    const baseRows = [];
     for (const key in BASE_ITEMS) {
         baseItemsTotal += BASE_ITEMS[key].items;
         baseCostTotal += BASE_ITEMS[key].cost;
         if (BASE_ITEMS[key].items > 0) {
-             baseDetails.push(`・${key}: ${BASE_ITEMS[key].items}個 (${BASE_ITEMS[key].cost.toLocaleString()}円)`);
+            baseRows.push(rowHtml(key, BASE_ITEMS[key].cost, `${BASE_ITEMS[key].items}個`));
         }
     }
+    const baseCard = cardHtml('必須購入', `期間中合計 ${baseItemsTotal}個 / ${yen(baseCostTotal)}`, baseRows);
 
-    let requiredItems = targetItem - baseItemsTotal;
-    
+    const requiredItems = targetItem - baseItemsTotal;
+
     if (requiredItems <= 0) {
-        return `
---- ${TARGET.label} ---
-✅ **目標達成に必要な合計費用: ${baseCostTotal.toLocaleString()}円** (必須購入のみ)
-[必須購入 (期間中合計 ${baseItemsTotal}個)]
-${baseDetails.join('\n')}
---- 補足 ---
-・総購入アイテム数: ${baseItemsTotal}個
-・目標達成後の余り: ${-requiredItems}個
-`;
+        return totalHtml(`目標 ${targetItem}個に必要な合計費用`, baseCostTotal,
+            `必須購入のみで達成 ／ 総購入 ${baseItemsTotal}個 ／ 余り ${-requiredItems}個`) + baseCard;
     }
-    
-    // -------------------------------------------------------------------------
+
     // 3日間の連鎖パックの購入パターン（5^3 = 125パターン）を試行する
-    // -------------------------------------------------------------------------
-    
     let bestPlan = null;
     let minCost = Infinity;
 
@@ -105,46 +107,43 @@ ${baseDetails.join('\n')}
             for (let k = 0; k < 5; k++) {
                 let currentCost = baseCostTotal;
                 let currentItems = baseItemsTotal;
-                let planDetails = {};
-                
+                const planDetails = {};
+
                 const dayPatterns = [
                     { dayIndex: 1, pattern: CHAIN_PACK_OPTIONS[i] },
                     { dayIndex: 2, pattern: CHAIN_PACK_OPTIONS[j] },
                     { dayIndex: 3, pattern: CHAIN_PACK_OPTIONS[k] }
                 ];
-                
+
                 for (const { dayIndex, pattern } of dayPatterns) {
                     currentCost += pattern.cost;
                     currentItems += pattern.items;
-                    
-                    let details = pattern.details.map(p => `・${p.label.split('(')[0].trim()}`);
-                    if (details.length === 0) {
-                        details = ['・この日は限定パックの購入なし'];
-                    }
-                    
+
                     planDetails[dayIndex] = {
                         items: pattern.items,
                         cost: pattern.cost,
-                        details: details
+                        rows: pattern.details.map(p => rowHtml(p.name, p.cost))
                     };
                 }
-                
-                let shortfall = targetItem - currentItems;
+
+                const shortfall = targetItem - currentItems;
 
                 if (shortfall > 0) {
-                    let packsNeeded = Math.ceil(shortfall / UNLIMITED_PACK.items);
-                    let unlimitedItemsTotal = packsNeeded * UNLIMITED_PACK.items;
-                    let unlimitedCostTotal = packsNeeded * UNLIMITED_PACK.cost;
+                    const packsNeeded = Math.ceil(shortfall / UNLIMITED_PACK.items);
+                    const unlimitedItemsTotal = packsNeeded * UNLIMITED_PACK.items;
+                    const unlimitedCostTotal = packsNeeded * UNLIMITED_PACK.cost;
 
                     currentCost += unlimitedCostTotal;
                     currentItems += unlimitedItemsTotal;
 
-                    let day = EVENT_DAYS;
-                    let detailLine = `・${UNLIMITED_PACK.label} を ${packsNeeded}回購入: ${unlimitedItemsTotal}個 (${unlimitedCostTotal.toLocaleString()}円)`;
-                    
+                    const day = EVENT_DAYS;
                     planDetails[day].items += unlimitedItemsTotal;
                     planDetails[day].cost += unlimitedCostTotal;
-                    planDetails[day].details.push(detailLine);
+                    planDetails[day].rows.push(rowHtml(
+                        `${UNLIMITED_PACK.label} × ${packsNeeded}回`,
+                        unlimitedCostTotal,
+                        `${unlimitedItemsTotal}個（${yen(UNLIMITED_PACK.cost)} × ${packsNeeded}）`
+                    ));
                 }
 
                 if (currentItems >= targetItem && currentCost < minCost) {
@@ -153,8 +152,7 @@ ${baseDetails.join('\n')}
                         totalCost: currentCost,
                         totalPurchased: currentItems,
                         excessItems: currentItems - targetItem,
-                        purchasePlan: planDetails,
-                        baseDetails: baseDetails
+                        purchasePlan: planDetails
                     };
                 }
             }
@@ -162,33 +160,17 @@ ${baseDetails.join('\n')}
     }
 
     if (!bestPlan) {
-        return "エラー: 最適な購入プランが見つかりませんでした。目標値が高すぎる可能性があります。";
+        return '<p class="error">エラー: 最適な購入プランが見つかりませんでした。目標値が高すぎる可能性があります。</p>';
     }
 
-    let dailyPlanString = '';
+    let html = totalHtml(`目標 ${targetItem}個に必要な合計費用`, bestPlan.totalCost,
+        `総購入 ${bestPlan.totalPurchased}個 ／ 余り ${bestPlan.excessItems}個`);
+    html += baseCard;
+
     for (let day = 1; day <= EVENT_DAYS; day++) {
-        let plan = bestPlan.purchasePlan[day] || { items: 0, cost: 0, details: ['・この日は購入なし'] };
-        
-        dailyPlanString += `
-🗓️ **${day}日目の追加購入 (合計 ${plan.items.toLocaleString()}個 / ${plan.cost.toLocaleString()}円)**
-${plan.details.join('\n')}
-`;
+        const plan = bestPlan.purchasePlan[day];
+        const rows = plan.rows.length > 0 ? plan.rows : ['<li class="none">この日は購入なし</li>'];
+        html += cardHtml(`${day}日目の追加購入`, `${plan.items.toLocaleString()}個 / ${yen(plan.cost)}`, rows);
     }
-
-    let finalMessage = `
---- ${TARGET.label} ---
-✅ **目標達成に必要な合計費用: ${bestPlan.totalCost.toLocaleString()}円**
-
-[必須購入 (期間中合計 ${baseItemsTotal}個)]
-${bestPlan.baseDetails.join('\n')}
-${dailyPlanString}
---- 補足 ---
-・総購入アイテム数: ${bestPlan.totalPurchased}個
-・目標達成後の余り: ${bestPlan.excessItems}個
-`;
-    
-    let messageTitle = `イベント課金 最安値シミュレーター (最適化)`;
-    return messageTitle + '\n\n' + finalMessage;
-
-    // === calculateOptimalCost関数の内容終了 ===
+    return html;
 }
